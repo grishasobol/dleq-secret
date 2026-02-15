@@ -107,6 +107,15 @@ pub struct ElGamalPointCipher {
     pub c2: RistrettoPoint,
 }
 
+impl ElGamalPointCipher {
+    pub fn decrypt(&self, mut enc: Vec<u8>, sk: Scalar) -> Vec<u8> {
+        let m_recovered = elgamal_decrypt_point(sk, self);
+        let k1 = hash32(KDF_LABEL, m_recovered.compress().as_bytes());
+        xor_in_place(&mut enc, &k1);
+        enc
+    }
+}
+
 impl Encode for ElGamalPointCipher {
     fn encode(&self) -> Vec<u8> {
         let mut out = Vec::new();
@@ -430,12 +439,7 @@ impl GrantWithProof {
     }
 
     pub fn decrypt_message(&self, public_data: &PublicData, sk: Scalar) -> Vec<u8> {
-        let m_recovered = elgamal_decrypt_point(sk, &self.enc_m_under_pk);
-        let k1 = hash32(KDF_LABEL, m_recovered.compress().as_bytes());
-        let mut x_dec = public_data.enc_x.clone();
-        xor_in_place(&mut x_dec, &k1);
-
-        x_dec
+        self.enc_m_under_pk.decrypt(public_data.enc_x.clone(), sk)
     }
 }
 

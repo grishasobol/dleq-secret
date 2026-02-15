@@ -5,6 +5,7 @@ extern crate alloc;
 use alloc::vec::Vec;
 use curve25519_dalek::{constants::RISTRETTO_BASEPOINT_POINT as G, ristretto::CompressedRistretto};
 use parity_scale_codec::{Decode, Encode};
+use scale_info::TypeInfo;
 use sha2::{Digest, Sha512};
 
 #[cfg(feature = "std")]
@@ -30,6 +31,16 @@ impl Decode for PK {
         input: &mut I,
     ) -> Result<Self, parity_scale_codec::Error> {
         decode_point(input).map(PK)
+    }
+}
+
+impl TypeInfo for PK {
+    type Identity = Self;
+
+    fn type_info() -> scale_info::Type {
+        scale_info::Type::builder()
+            .path(scale_info::Path::new("PK", module_path!()))
+            .composite(scale_info::build::Fields::unnamed())
     }
 }
 
@@ -368,6 +379,21 @@ impl Decode for PublicData {
             enc_m_under_xkey,
             enc_x,
         })
+    }
+}
+
+impl TypeInfo for PublicData {
+    type Identity = Self;
+
+    fn type_info() -> scale_info::Type {
+        scale_info::Type::builder()
+            .path(scale_info::Path::new("PublicData", module_path!()))
+            .composite(
+                scale_info::build::Fields::named()
+                    .field(|f| f.name("pk_xkey").ty::<PK>())
+                    .field(|f| f.name("enc_m_under_xkey").ty::<(PK, PK)>())
+                    .field(|f| f.name("enc_x").ty::<Vec<u8>>()),
+            )
     }
 }
 

@@ -127,6 +127,20 @@ impl Decode for ElGamalPointCipher {
     }
 }
 
+impl TypeInfo for ElGamalPointCipher {
+    type Identity = Self;
+
+    fn type_info() -> scale_info::Type {
+        scale_info::Type::builder()
+            .path(scale_info::Path::new("ElGamalPointCipher", module_path!()))
+            .composite(
+                scale_info::build::Fields::named()
+                    .field(|f| f.name("c1").ty::<PK>())
+                    .field(|f| f.name("c2").ty::<PK>()),
+            )
+    }
+}
+
 #[cfg(feature = "std")]
 fn elgamal_encrypt_point(pk: RistrettoPoint, m: RistrettoPoint) -> (ElGamalPointCipher, Scalar) {
     let r = random_scalar();
